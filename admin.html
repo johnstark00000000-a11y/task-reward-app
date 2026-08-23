@@ -83,8 +83,7 @@
         function getHeaders() {
             return {
                 'Content-Type': 'application/json',
-                'x-admin-key': ADMIN_SECRET,
-                'Authorization': `Bearer ${ADMIN_SECRET}`
+                'x-admin-key': ADMIN_SECRET
             };
         }
 
@@ -138,22 +137,30 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/tasks/add`, {
+                // FIXED URL: /api/admin/tasks (backend ke sath match kar diya hai)
+                const res = await fetch(`${BACKEND_URL}/api/admin/tasks`, {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify({ title, amount: Number(amount), url })
+                    body: JSON.stringify({ 
+                        title, 
+                        amount: Number(amount), 
+                        reward: Number(amount), 
+                        url,
+                        description: "Complete this task",
+                        time: 60 
+                    })
                 });
 
                 const data = await res.json();
 
-                if (res.ok && (data.success || data._id || data.task)) {
+                if (res.ok && data.success) {
                     alert('✅ Task Added Successfully!');
                     document.getElementById('taskTitle').value = '';
                     document.getElementById('taskReward').value = '';
                     document.getElementById('taskLink').value = '';
                     loadAdminTasks();
                 } else {
-                    alert('❌ Backend Error: ' + (data.error || data.message || 'Unauthorized Action'));
+                    alert('❌ Backend Error: ' + (data.error || 'Unauthorized Action'));
                 }
             } catch (err) {
                 alert('⚠️ Server Timeout: Render server jaag rha hai. 20-30 sec baad fir se "Publish Task" dabayein!');
@@ -165,7 +172,11 @@
 
         async function loadAdminTasks() {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/tasks`);
+                // Note: verifyToken hatne ke baad ye public tasks fetch kar lega
+                const token = localStorage.getItem('userToken') || ''; 
+                const res = await fetch(`${BACKEND_URL}/api/tasks`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 const data = await res.json();
                 const taskContainer = document.getElementById('adminTaskList');
                 taskContainer.innerHTML = '';
@@ -174,12 +185,13 @@
 
                 if (taskList.length > 0) {
                     taskList.forEach(t => {
+                        const taskId = t.id || t._id;
                         taskContainer.innerHTML += `
                             <div class="item-row">
                                 <div>
                                     <strong>${t.title}</strong> — ₹${t.amount}
                                 </div>
-                                <button onclick="deleteTask('${t._id}')" style="width:auto; padding:5px 10px; background:#ff5252; color:#fff;">Delete</button>
+                                <button onclick="deleteTask('${taskId}')" style="width:auto; padding:5px 10px; background:#ff5252; color:#fff;">Delete</button>
                             </div>
                         `;
                     });
@@ -191,7 +203,7 @@
 
         async function deleteTask(id) {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/tasks/delete/${id}`, {
+                await fetch(`${BACKEND_URL}/api/admin/tasks/delete/${id}`, {
                     method: 'DELETE',
                     headers: getHeaders()
                 });
@@ -215,12 +227,12 @@
                         container.innerHTML += `
                             <div class="item-row">
                                 <div>
-                                    <strong>₹${w.amount}</strong> (${w.upi})<br>
-                                    <small style="color:#aaa;">User: ${w.userEmail}</small>
+                                    <strong>₹${w.amount}</strong> (${w.method || 'UPI'})<br>
+                                    <small style="color:#aaa;">User ID: ${w.userId}</small>
                                 </div>
                                 <div>
-                                    <button onclick="updateWithdrawal('${w._id}', 'approved')" style="width:auto; padding:5px 8px; background:#00e676; color:#000;">Approve</button>
-                                    <button onclick="updateWithdrawal('${w._id}', 'rejected')" style="width:auto; padding:5px 8px; background:#ff5252; color:#fff;">Reject</button>
+                                    <button onclick="updateWithdrawal('${w.id || w._id}', 'approved')" style="width:auto; padding:5px 8px; background:#00e676; color:#000;">Approve</button>
+                                    <button onclick="updateWithdrawal('${w.id || w._id}', 'rejected')" style="width:auto; padding:5px 8px; background:#ff5252; color:#fff;">Reject</button>
                                 </div>
                             </div>
                         `;
