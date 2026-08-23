@@ -12,6 +12,7 @@
         input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 14px; }
         button { background: #ff9800; color: #000; font-weight: bold; cursor: pointer; border: none; }
         button:hover { background: #f57c00; }
+        button:disabled { background: #555; color: #aaa; cursor: not-allowed; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: #2a2a2a; border-radius: 8px; padding: 15px; text-align: center; border-left: 4px solid #ff9800; }
         .stat-card h2 { font-size: 28px; color: #fff; margin-top: 5px; }
@@ -58,7 +59,7 @@
             <input type="text" id="taskTitle" placeholder="Task Title (e.g. Subscribe Channel)">
             <input type="number" id="taskReward" placeholder="Reward Amount (₹)">
             <input type="text" id="taskLink" placeholder="Task Target URL">
-            <button onclick="addNewTask()">Publish Task</button>
+            <button id="addBtn" onclick="addNewTask()">Publish Task</button>
         </div>
 
         <!-- MANAGE TASKS -->
@@ -117,11 +118,15 @@
         }
 
         async function addNewTask() {
-            const title = document.getElementById('taskTitle').value;
-            const amount = document.getElementById('taskReward').value;
-            const url = document.getElementById('taskLink').value;
+            const title = document.getElementById('taskTitle').value.trim();
+            const amount = document.getElementById('taskReward').value.trim();
+            const url = document.getElementById('taskLink').value.trim();
+            const btn = document.getElementById('addBtn');
 
-            if (!title || !amount) return alert('Fill title and reward!');
+            if (!title || !amount) return alert('Please enter Title and Reward Amount!');
+
+            btn.innerText = 'Publishing... (Wait)';
+            btn.disabled = true;
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/admin/tasks/add`, {
@@ -130,17 +135,26 @@
                         'Content-Type': 'application/json',
                         'x-admin-key': ADMIN_SECRET 
                     },
-                    body: JSON.stringify({ title, amount, url })
+                    body: JSON.stringify({ title, amount: Number(amount), url })
                 });
+
                 const data = await res.json();
-                if (data.success) {
-                    alert('Task Added!');
+
+                if (res.ok && data.success) {
+                    alert('✅ Task Added Successfully!');
                     document.getElementById('taskTitle').value = '';
                     document.getElementById('taskReward').value = '';
                     document.getElementById('taskLink').value = '';
                     loadAdminTasks();
+                } else {
+                    alert('❌ Failed: ' + (data.message || 'Unauthorized / Invalid Admin Key on Server'));
                 }
-            } catch (err) { alert('Failed to add task'); }
+            } catch (err) {
+                alert('⚠️ Connection Error: Server wake up ho rha hai ya Render offline hai. 30 sec baad fir se try karein!');
+            } finally {
+                btn.innerText = 'Publish Task';
+                btn.disabled = false;
+            }
         }
 
         async function loadAdminTasks() {
