@@ -77,7 +77,16 @@
 
     <script>
         const BACKEND_URL = 'https://task-reward-app.onrender.com'; // Live Render Backend Link
-        const ADMIN_SECRET = 'Asr@1234'; // Set your Master Secret Passcode here
+        const ADMIN_SECRET = 'Asr@1234'; // Master Passcode
+
+        // Helper Function for Headers
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'x-admin-key': ADMIN_SECRET,
+                'Authorization': `Bearer ${ADMIN_SECRET}`
+            };
+        }
 
         window.onload = function() {
             const isAuth = localStorage.getItem('adminAuth');
@@ -107,7 +116,7 @@
         async function loadAdminStats() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/admin/stats`, {
-                    headers: { 'x-admin-key': ADMIN_SECRET }
+                    headers: getHeaders()
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -123,34 +132,31 @@
             const url = document.getElementById('taskLink').value.trim();
             const btn = document.getElementById('addBtn');
 
-            if (!title || !amount) return alert('Please enter Title and Reward Amount!');
+            if (!title || !amount) return alert('Please fill in Title and Reward Amount!');
 
-            btn.innerText = 'Publishing... (Wait)';
+            btn.innerText = 'Publishing... (Please Wait)';
             btn.disabled = true;
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/admin/tasks/add`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-admin-key': ADMIN_SECRET 
-                    },
+                    headers: getHeaders(),
                     body: JSON.stringify({ title, amount: Number(amount), url })
                 });
 
                 const data = await res.json();
 
-                if (res.ok && data.success) {
+                if (res.ok && (data.success || data._id || data.task)) {
                     alert('✅ Task Added Successfully!');
                     document.getElementById('taskTitle').value = '';
                     document.getElementById('taskReward').value = '';
                     document.getElementById('taskLink').value = '';
                     loadAdminTasks();
                 } else {
-                    alert('❌ Failed: ' + (data.message || 'Unauthorized / Invalid Admin Key on Server'));
+                    alert('❌ Backend Error: ' + (data.error || data.message || 'Unauthorized Action'));
                 }
             } catch (err) {
-                alert('⚠️ Connection Error: Server wake up ho rha hai ya Render offline hai. 30 sec baad fir se try karein!');
+                alert('⚠️ Server Timeout: Render server jaag rha hai. 20-30 sec baad fir se "Publish Task" dabayein!');
             } finally {
                 btn.innerText = 'Publish Task';
                 btn.disabled = false;
@@ -164,8 +170,10 @@
                 const taskContainer = document.getElementById('adminTaskList');
                 taskContainer.innerHTML = '';
 
-                if (data.tasks && data.tasks.length > 0) {
-                    data.tasks.forEach(t => {
+                const taskList = Array.isArray(data) ? data : (data.tasks || []);
+
+                if (taskList.length > 0) {
+                    taskList.forEach(t => {
                         taskContainer.innerHTML += `
                             <div class="item-row">
                                 <div>
@@ -176,32 +184,34 @@
                         `;
                     });
                 } else {
-                    taskContainer.innerHTML = '<p style="color:#aaa; font-size:13px;">No tasks created yet.</p>';
+                    taskContainer.innerHTML = '<p style="color:#aaa; font-size:13px;">No active tasks found.</p>';
                 }
             } catch (err) { console.error(err); }
         }
 
         async function deleteTask(id) {
             try {
-                await fetch(`${BACKEND_URL}/api/admin/tasks/delete/${id}`, {
+                const res = await fetch(`${BACKEND_URL}/api/admin/tasks/delete/${id}`, {
                     method: 'DELETE',
-                    headers: { 'x-admin-key': ADMIN_SECRET }
+                    headers: getHeaders()
                 });
                 loadAdminTasks();
-            } catch (err) { alert('Delete failed'); }
+            } catch (err) { alert('Delete failed!'); }
         }
 
         async function loadWithdrawals() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/admin/withdrawals`, {
-                    headers: { 'x-admin-key': ADMIN_SECRET }
+                    headers: getHeaders()
                 });
                 const data = await res.json();
                 const container = document.getElementById('withdrawalList');
                 container.innerHTML = '';
 
-                if (data.withdrawals && data.withdrawals.length > 0) {
-                    data.withdrawals.forEach(w => {
+                const withdrawals = Array.isArray(data) ? data : (data.withdrawals || []);
+
+                if (withdrawals.length > 0) {
+                    withdrawals.forEach(w => {
                         container.innerHTML += `
                             <div class="item-row">
                                 <div>
@@ -225,15 +235,12 @@
             try {
                 await fetch(`${BACKEND_URL}/api/admin/withdrawals/update`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-admin-key': ADMIN_SECRET 
-                    },
+                    headers: getHeaders(),
                     body: JSON.stringify({ withdrawalId: id, status })
                 });
                 loadWithdrawals();
                 loadAdminStats();
-            } catch (err) { alert('Action failed'); }
+            } catch (err) { alert('Action failed!'); }
         }
 
         function lockAdminPanel() {
