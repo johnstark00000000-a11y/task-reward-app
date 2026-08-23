@@ -586,7 +586,7 @@
                 <button class="nav-btn" onclick="switchTab('profile')">Profile</button>
                 <button class="nav-btn" onclick="switchTab('referral')">Referral</button>
                 <button class="nav-btn" onclick="switchTab('withdraw')">Withdraw</button>
-                <div class="wallet">Wallet: ₹<span id="walletAmount">250</span></div>
+                <div class="wallet">Wallet: ₹<span id="walletAmount">0</span></div>
             </div>
         </header>
 
@@ -596,7 +596,7 @@
             <div id="tasks" class="tabs active">
                 <h2 style="margin-bottom: 20px; color: #333;">Available Tasks</h2>
                 <div class="task-grid" id="taskGrid">
-                    <!-- Tasks will be populated here -->
+                    <p style="color: #666;">Loading active tasks...</p>
                 </div>
             </div>
 
@@ -605,19 +605,19 @@
                 <div class="dashboard">
                     <div class="dash-card">
                         <h3>Total Earned</h3>
-                        <div class="value">₹<span id="totalEarned">2,500</span></div>
+                        <div class="value">₹<span id="totalEarned">0</span></div>
                     </div>
                     <div class="dash-card green">
                         <h3>Tasks Completed</h3>
-                        <div class="value"><span id="tasksCompleted">18</span></div>
+                        <div class="value"><span id="tasksCompleted">0</span></div>
                     </div>
                     <div class="dash-card orange">
                         <h3>Referral Earnings</h3>
-                        <div class="value">₹<span id="referralEarned">800</span></div>
+                        <div class="value">₹<span id="referralEarned">0</span></div>
                     </div>
                     <div class="dash-card blue">
                         <h3>Active Referrals</h3>
-                        <div class="value"><span id="activeReferrals">5</span></div>
+                        <div class="value"><span id="activeReferrals">0</span></div>
                     </div>
                 </div>
 
@@ -625,64 +625,11 @@
                     <div class="profile-header">
                         <div class="profile-avatar">👤</div>
                         <div class="profile-info">
-                            <h2>John Doe</h2>
-                            <p>📧 john@example.com</p>
-                            <p>📱 +91 98765 43210</p>
+                            <h2 id="userName">User</h2>
+                            <p id="userEmail">📧 user@example.com</p>
                             <p>✅ Verified Member</p>
                         </div>
                     </div>
-                    <div class="profile-grid">
-                        <div class="profile-item">
-                            <label>Member Since</label>
-                            <div class="value">45 days</div>
-                        </div>
-                        <div class="profile-item">
-                            <label>Avg Rating</label>
-                            <div class="value">⭐ 4.8</div>
-                        </div>
-                        <div class="profile-item">
-                            <label>Approval Rate</label>
-                            <div class="value">98%</div>
-                        </div>
-                        <div class="profile-item">
-                            <label>Pending Payout</label>
-                            <div class="value">₹500</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="profile-section">
-                    <h3>Recent Activity</h3>
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Task</th>
-                                <th>Amount</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Install App XYZ</td>
-                                <td>₹150</td>
-                                <td>Today</td>
-                                <td><span class="status-badge status-completed">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td>Watch Video ABC</td>
-                                <td>₹75</td>
-                                <td>Yesterday</td>
-                                <td><span class="status-badge status-completed">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td>Signup App DEF</td>
-                                <td>₹200</td>
-                                <td>2 days ago</td>
-                                <td><span class="status-badge status-pending">Pending</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
@@ -691,46 +638,8 @@
                 <div class="referral-box">
                     <h2>Earn Extra Money!</h2>
                     <p>Share your referral code and earn 20% commission from your friends' earnings</p>
-                    <div class="referral-code" id="referralCode">JOHN8A4F2X</div>
+                    <div class="referral-code" id="referralCode">EARN123</div>
                     <button class="copy-btn" onclick="copyReferralCode()">📋 Copy Code</button>
-                    <p style="margin-top: 15px; font-size: 14px;">Or share this link:</p>
-                    <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; margin-top: 10px; word-break: break-all; font-size: 12px;">
-                        https://earntask.com?ref=JOHN8A4F2X
-                    </div>
-                </div>
-
-                <div class="profile-section">
-                    <h3>Your Referrals</h3>
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Friend</th>
-                                <th>Joined</th>
-                                <th>Earnings</th>
-                                <th>Your Commission</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Raj Kumar</td>
-                                <td>10 days ago</td>
-                                <td>₹1,500</td>
-                                <td>₹300</td>
-                            </tr>
-                            <tr>
-                                <td>Priya Singh</td>
-                                <td>20 days ago</td>
-                                <td>₹2,000</td>
-                                <td>₹400</td>
-                            </tr>
-                            <tr>
-                                <td>Amit Patel</td>
-                                <td>5 days ago</td>
-                                <td>₹500</td>
-                                <td>₹100</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
@@ -740,12 +649,12 @@
                     <h3>💳 Withdraw Money</h3>
                     
                     <div class="success-msg" id="successMsg">
-                        ✅ Withdrawal request submitted successfully! You'll receive money within 24 hours.
+                        ✅ Withdrawal request submitted successfully!
                     </div>
 
                     <form onsubmit="submitWithdrawal(event)">
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                            <p style="color: #666; margin-bottom: 10px;">Available Balance: <strong>₹<span id="availableBalance">2500</span></strong></p>
+                            <p style="color: #666; margin-bottom: 10px;">Available Balance: <strong>₹<span id="availableBalance">0</span></strong></p>
                             <p style="color: #666; font-size: 12px;">Minimum withdrawal: ₹100 | Maximum: ₹50,000</p>
                         </div>
 
@@ -753,10 +662,7 @@
                             <label>Payment Method</label>
                             <select id="paymentMethod" required>
                                 <option value="">Select Method</option>
-                                <option value="bank">Bank Transfer</option>
                                 <option value="upi">UPI</option>
-                                <option value="paytm">Paytm</option>
-                                <option value="phonepe">PhonePe</option>
                             </select>
                         </div>
 
@@ -765,271 +671,127 @@
                             <input type="number" id="withdrawAmount" placeholder="Enter amount" min="100" max="50000" required>
                         </div>
 
-                        <div class="form-group" id="bankDetails" style="display: none;">
-                            <label>Account Number</label>
-                            <input type="text" id="accountNumber" placeholder="Your account number">
-                        </div>
-
-                        <div class="form-group" id="upiDetails" style="display: none;">
+                        <div class="form-group" id="upiDetails">
                             <label>UPI ID</label>
-                            <input type="text" id="upiId" placeholder="yourname@bank">
-                        </div>
-
-                        <div class="form-group" id="paytmDetails" style="display: none;">
-                            <label>Phone Number</label>
-                            <input type="tel" id="paytmPhone" placeholder="10 digit mobile number">
+                            <input type="text" id="upiId" placeholder="yourname@bank" required>
                         </div>
 
                         <button type="submit" class="withdraw-btn">Request Withdrawal</button>
                     </form>
                 </div>
-
-                <div class="profile-section">
-                    <h3>Withdrawal History</h3>
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Amount</th>
-                                <th>Method</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>₹1,000</td>
-                                <td>Bank Transfer</td>
-                                <td>Aug 20, 2026</td>
-                                <td><span class="status-badge status-completed">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td>₹500</td>
-                                <td>UPI</td>
-                                <td>Aug 15, 2026</td>
-                                <td><span class="status-badge status-completed">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td>₹750</td>
-                                <td>Paytm</td>
-                                <td>Aug 23, 2026</td>
-                                <td><span class="status-badge status-pending">Processing</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Task Detail Modal -->
-    <div class="modal" id="taskModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Task Details</h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-            <div id="modalBody"></div>
         </div>
     </div>
 
     <script>
-        // Sample Tasks Data
-        const tasks = [
-            {
-                id: 1,
-                icon: '📱',
-                title: 'Install & Run App XYZ',
-                desc: 'Install the app and run it for 5 minutes',
-                amount: 150,
-                time: '5 min',
-                users: '2.5k',
-                completed: false
-            },
-            {
-                id: 2,
-                icon: '📺',
-                title: 'Watch Video ABC',
-                desc: 'Watch a 2-minute promotional video',
-                amount: 75,
-                time: '3 min',
-                users: '4.2k',
-                completed: true
-            },
-            {
-                id: 3,
-                icon: '👤',
-                title: 'Sign Up on App DEF',
-                desc: 'Create account and verify email',
-                amount: 200,
-                time: '10 min',
-                users: '1.8k',
-                completed: false
-            },
-            {
-                id: 4,
-                icon: '⭐',
-                title: 'Rate & Review App GHI',
-                desc: 'Give 5 stars and write review',
-                amount: 100,
-                time: '8 min',
-                users: '3.1k',
-                completed: false
-            },
-            {
-                id: 5,
-                icon: '🎮',
-                title: 'Play Game & Reach Level 5',
-                desc: 'Download game and reach level 5',
-                amount: 250,
-                time: '15 min',
-                users: '980',
-                completed: false
-            },
-            {
-                id: 6,
-                icon: '📝',
-                title: 'Complete Survey',
-                desc: 'Answer 20 quick questions',
-                amount: 120,
-                time: '7 min',
-                users: '2.9k',
-                completed: false
-            }
-        ];
+        const API_BASE_URL = 'https://task-reward-app.onrender.com';
+        let tasksList = [];
 
-        // Initialize App
-        function initApp() {
-            renderTasks();
+        async function initApp() {
+            await fetchTasks();
             setupPaymentMethodListeners();
         }
 
-        // Render Tasks
+        async function fetchTasks() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/tasks`);
+                const data = await res.json();
+                if (data.tasks) {
+                    tasksList = data.tasks;
+                    renderTasks();
+                }
+            } catch (err) {
+                console.error("Failed to fetch tasks:", err);
+                document.getElementById('taskGrid').innerHTML = '<p style="color:#ff5252;">Failed to load tasks from server.</p>';
+            }
+        }
+
         function renderTasks() {
             const taskGrid = document.getElementById('taskGrid');
-            taskGrid.innerHTML = tasks.map(task => `
+            if (tasksList.length === 0) {
+                taskGrid.innerHTML = '<p style="color:#666;">No tasks available right now.</p>';
+                return;
+            }
+
+            taskGrid.innerHTML = tasksList.map(task => `
                 <div class="task-card">
                     <div class="task-header">
-                        <span class="task-icon">${task.icon}</span>
+                        <span class="task-icon">📌</span>
                         <span class="task-amount">₹${task.amount}</span>
                     </div>
                     <div class="task-title">${task.title}</div>
-                    <div class="task-desc">${task.desc}</div>
-                    <div class="task-info">
-                        <span>⏱️ ${task.time}</span>
-                        <span>👥 ${task.users} doing</span>
-                    </div>
-                    <button class="task-btn ${task.completed ? 'completed' : ''}" onclick="completeTask(${task.id})">
-                        ${task.completed ? '✅ Completed' : 'Start Task'}
+                    <div class="task-desc">${task.url ? `<a href="${task.url}" target="_blank" style="color:#667eea;">Open Target Link</a>` : 'Complete the action'}</div>
+                    <button class="task-btn" onclick="completeTask('${task._id}', ${task.amount})">
+                        Start Task
                     </button>
                 </div>
             `).join('');
         }
 
-        // Complete Task
-        function completeTask(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (!task.completed) {
-                task.completed = true;
-                let walletAmount = parseInt(document.getElementById('walletAmount').textContent);
-                walletAmount += task.amount;
-                document.getElementById('walletAmount').textContent = walletAmount;
-                renderTasks();
-                showSuccess(`Great! You earned ₹${task.amount}`);
-            }
+        function completeTask(taskId, amount) {
+            let walletAmount = parseInt(document.getElementById('walletAmount').textContent);
+            walletAmount += amount;
+            document.getElementById('walletAmount').textContent = walletAmount;
+            document.getElementById('availableBalance').textContent = walletAmount;
+            alert(`Task completed! Earned ₹${amount}`);
         }
 
-        // Switch Tab
         function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tabs').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            document.querySelectorAll('.tabs').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             
-            // Remove active class from all buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected tab
             document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked button
             event.target.classList.add('active');
         }
 
-        // Copy Referral Code
         function copyReferralCode() {
             const code = document.getElementById('referralCode').textContent;
             navigator.clipboard.writeText(code);
-            alert('Referral code copied to clipboard!');
+            alert('Referral code copied!');
         }
 
-        // Setup Payment Method Listeners
         function setupPaymentMethodListeners() {
             const paymentMethod = document.getElementById('paymentMethod');
-            paymentMethod.addEventListener('change', function() {
-                // Hide all details
-                document.getElementById('bankDetails').style.display = 'none';
-                document.getElementById('upiDetails').style.display = 'none';
-                document.getElementById('paytmDetails').style.display = 'none';
-                
-                // Show selected method details
-                if (this.value === 'bank') {
-                    document.getElementById('bankDetails').style.display = 'block';
-                } else if (this.value === 'upi') {
+            if (paymentMethod) {
+                paymentMethod.addEventListener('change', function() {
                     document.getElementById('upiDetails').style.display = 'block';
-                } else if (this.value === 'paytm' || this.value === 'phonepe') {
-                    document.getElementById('paytmDetails').style.display = 'block';
-                }
-            });
+                });
+            }
         }
 
-        // Submit Withdrawal
-        function submitWithdrawal(event) {
+        async function submitWithdrawal(event) {
             event.preventDefault();
-            
             const amount = document.getElementById('withdrawAmount').value;
-            const method = document.getElementById('paymentMethod').value;
-            
-            if (amount < 100 || amount > 50000) {
-                alert('Amount must be between ₹100 and ₹50,000');
-                return;
-            }
-            
+            const upi = document.getElementById('upiId').value;
             let walletAmount = parseInt(document.getElementById('walletAmount').textContent);
+
             if (amount > walletAmount) {
                 alert('Insufficient balance!');
                 return;
             }
-            
-            // Deduct from wallet
-            walletAmount -= parseInt(amount);
-            document.getElementById('walletAmount').textContent = walletAmount;
-            document.getElementById('availableBalance').textContent = walletAmount;
-            
-            // Show success message
-            document.getElementById('successMsg').classList.add('show');
-            
-            // Reset form
-            event.target.reset();
-            
-            // Hide success message after 5 seconds
-            setTimeout(() => {
-                document.getElementById('successMsg').classList.remove('show');
-            }, 5000);
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/admin/withdrawals/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, upi, userEmail: 'user@example.com' })
+                });
+
+                walletAmount -= parseInt(amount);
+                document.getElementById('walletAmount').textContent = walletAmount;
+                document.getElementById('availableBalance').textContent = walletAmount;
+                
+                document.getElementById('successMsg').classList.add('show');
+                event.target.reset();
+
+                setTimeout(() => {
+                    document.getElementById('successMsg').classList.remove('show');
+                }, 5000);
+            } catch (err) {
+                alert('Withdrawal request submitted locally!');
+            }
         }
 
-        // Show Success Message
-        function showSuccess(message) {
-            alert(message);
-        }
-
-        // Close Modal
-        function closeModal() {
-            document.getElementById('taskModal').classList.remove('show');
-        }
-
-        // Initialize on load
         window.addEventListener('load', initApp);
     </script>
 </body>
