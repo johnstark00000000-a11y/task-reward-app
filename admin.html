@@ -120,7 +120,7 @@
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('totalUsers').innerText = data.stats.totalUsers || 0;
-                    document.getElementById('totalPayouts').innerText = `₹${data.stats.totalPayouts || 0}`;
+                    document.getElementById('totalPayouts').innerText = `₹${data.stats.totalWithdrawals || 0}`;
                 }
             } catch (err) { console.error(err); }
         }
@@ -137,7 +137,6 @@
             btn.disabled = true;
 
             try {
-                // FIXED URL: /api/admin/tasks (backend ke sath match kar diya hai)
                 const res = await fetch(`${BACKEND_URL}/api/admin/tasks`, {
                     method: 'POST',
                     headers: getHeaders(),
@@ -159,11 +158,12 @@
                     document.getElementById('taskReward').value = '';
                     document.getElementById('taskLink').value = '';
                     loadAdminTasks();
+                    loadAdminStats();
                 } else {
                     alert('❌ Backend Error: ' + (data.error || 'Unauthorized Action'));
                 }
             } catch (err) {
-                alert('⚠️ Server Timeout: Render server jaag rha hai. 20-30 sec baad fir se "Publish Task" dabayein!');
+                alert('⚠️ Server Timeout: Render server active ho raha hai. 10-20 sec baad fir se "Publish Task" dabayein!');
             } finally {
                 btn.innerText = 'Publish Task';
                 btn.disabled = false;
@@ -172,10 +172,9 @@
 
         async function loadAdminTasks() {
             try {
-                // Note: verifyToken hatne ke baad ye public tasks fetch kar lega
-                const token = localStorage.getItem('userToken') || ''; 
+                // Pass admin headers to bypass 401 on /api/tasks if needed
                 const res = await fetch(`${BACKEND_URL}/api/tasks`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getHeaders()
                 });
                 const data = await res.json();
                 const taskContainer = document.getElementById('adminTaskList');
@@ -191,7 +190,7 @@
                                 <div>
                                     <strong>${t.title}</strong> — ₹${t.amount}
                                 </div>
-                                <button onclick="deleteTask('${taskId}')" style="width:auto; padding:5px 10px; background:#ff5252; color:#fff;">Delete</button>
+                                <span style="font-size:12px; color:#aaa;">Active</span>
                             </div>
                         `;
                     });
@@ -199,16 +198,6 @@
                     taskContainer.innerHTML = '<p style="color:#aaa; font-size:13px;">No active tasks found.</p>';
                 }
             } catch (err) { console.error(err); }
-        }
-
-        async function deleteTask(id) {
-            try {
-                await fetch(`${BACKEND_URL}/api/admin/tasks/delete/${id}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-                loadAdminTasks();
-            } catch (err) { alert('Delete failed!'); }
         }
 
         async function loadWithdrawals() {
@@ -227,12 +216,8 @@
                         container.innerHTML += `
                             <div class="item-row">
                                 <div>
-                                    <strong>₹${w.amount}</strong> (${w.method || 'UPI'})<br>
+                                    <strong>₹${w.amount}</strong><br>
                                     <small style="color:#aaa;">User ID: ${w.userId}</small>
-                                </div>
-                                <div>
-                                    <button onclick="updateWithdrawal('${w.id || w._id}', 'approved')" style="width:auto; padding:5px 8px; background:#00e676; color:#000;">Approve</button>
-                                    <button onclick="updateWithdrawal('${w.id || w._id}', 'rejected')" style="width:auto; padding:5px 8px; background:#ff5252; color:#fff;">Reject</button>
                                 </div>
                             </div>
                         `;
@@ -241,18 +226,6 @@
                     container.innerHTML = '<p style="color:#aaa; font-size:13px;">No pending requests.</p>';
                 }
             } catch (err) { console.error(err); }
-        }
-
-        async function updateWithdrawal(id, status) {
-            try {
-                await fetch(`${BACKEND_URL}/api/admin/withdrawals/update`, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ withdrawalId: id, status })
-                });
-                loadWithdrawals();
-                loadAdminStats();
-            } catch (err) { alert('Action failed!'); }
         }
 
         function lockAdminPanel() {
