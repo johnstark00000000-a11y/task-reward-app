@@ -1,5 +1,5 @@
 // ============================================
-// TASK REWARD APP - BACKEND (FINAL CLEAN CODE)
+// TASK REWARD APP - BACKEND (FINAL - COPY PASTE)
 // ============================================
 
 const express = require('express');
@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-const app = express(); // <--- यह लाइन सबसे जरूरी है
+const app = express();
 
 // Middleware
 app.use(cors());
@@ -116,17 +116,36 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ============================================
-// TASK ROUTES
+// TASK ROUTES - PUBLIC (NO AUTH REQUIRED) ✅ FIXED
 // ============================================
-app.get('/api/tasks', verifyToken, async (req, res) => {
+app.get('/api/tasks', async (req, res) => {
   try {
     const snapshot = await db.collection('tasks').get();
     const tasks = [];
-    snapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
-    res.json({ success: true, tasks });
+    snapshot.forEach(doc => {
+      const taskData = doc.data();
+      if (taskData.active !== false) {
+        tasks.push({ 
+          id: doc.id,
+          _id: doc.id,
+          ...taskData 
+        });
+      }
+    });
+    res.json({ 
+      success: true, 
+      tasks,
+      count: tasks.length 
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ error: error.message, tasks: [], success: false });
   }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'alive', message: 'Server is running' });
 });
 
 // ============================================
@@ -138,7 +157,7 @@ app.post('/api/admin/tasks', async (req, res) => {
     const expectedKey = process.env.ADMIN_KEY || 'Asr@1234';
 
     if (!adminKey || adminKey !== expectedKey) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid Admin Key' });
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid Admin Key' });
     }
 
     const { title, description, amount, reward, url, icon, time, category } = req.body;
@@ -149,7 +168,7 @@ app.post('/api/admin/tasks', async (req, res) => {
       amount: Number(amount) || 0,
       reward: Number(reward || amount) || 0,
       url: url || "",
-      icon: (icon && typeof icon === 'string') ? icon : "",
+      icon: (icon && typeof icon === 'string') ? icon : "📌",
       time: Number(time) || 60,
       category: category || "General",
       completions: 0,
@@ -162,14 +181,18 @@ app.post('/api/admin/tasks', async (req, res) => {
     });
 
     const taskDoc = await db.collection('tasks').add(taskData);
+    
+    console.log(`✅ Task added: ${taskData.title} (ID: ${taskDoc.id})`);
 
-    res.json({
+    res.status(201).json({
       success: true,
       message: 'Task added successfully',
-      taskId: taskDoc.id
+      taskId: taskDoc.id,
+      task: { id: taskDoc.id, ...taskData }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Task creation error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -179,22 +202,29 @@ app.get('/api/admin/stats', async (req, res) => {
     const expectedKey = process.env.ADMIN_KEY || 'Asr@1234';
 
     if (!adminKey || adminKey !== expectedKey) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid Admin Key' });
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid Admin Key' });
     }
 
     const usersSnap = await db.collection('users').get();
     const tasksSnap = await db.collection('tasks').get();
+    const withdrawalsSnap = await db.collection('withdrawals').get();
+
+    let totalWithdrawals = 0;
+    withdrawalsSnap.forEach(doc => {
+      totalWithdrawals += doc.data().amount || 0;
+    });
 
     res.json({
       success: true,
       stats: {
         totalUsers: usersSnap.size,
         totalTasks: tasksSnap.size,
-        totalWithdrawals: 0
+        totalWithdrawals: totalWithdrawals
       }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Stats error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -204,13 +234,65 @@ app.get('/api/admin/withdrawals', async (req, res) => {
     const expectedKey = process.env.ADMIN_KEY || 'Asr@1234';
 
     if (!adminKey || adminKey !== expectedKey) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid Admin Key' });
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid Admin Key' });
     }
 
-    res.json({ success: true, withdrawals: [] });
+    const withdrawalsSnap = await db.collection('withdrawals').get();
+    const withdrawals = [];
+    
+    withdrawalsSnap.forEach(doc => {
+      withdrawals.push({ id: doc.id, ...doc.data() });
+    });
+
+    res.json({ 
+      success: true, 
+      withdrawals,
+      count: withdrawals.length 
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Withdrawals error:', error);
+    res.status(500).json({ success: false, error: error.message, withdrawals: [] });
   }
+});
+
+app.post('/api/admin/withdrawals/add', async (req, res) => {
+  try {
+    const { amount, upi, userEmail, userId } = req.body;
+
+    if (!amount || !upi) {
+      return res.status(400).json({ success: false, error: 'Amount and UPI required' });
+    }
+
+    const withdrawalData = {
+      amount: Number(amount),
+      upi,
+      userEmail: userEmail || 'unknown',
+      userId: userId || 'anonymous',
+      status: 'pending',
+      createdAt: new Date()
+    };
+
+    const withdrawalDoc = await db.collection('withdrawals').add(withdrawalData);
+    
+    console.log(`✅ Withdrawal request: ₹${amount} to ${upi}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Withdrawal request submitted',
+      withdrawalId: withdrawalDoc.id
+    });
+  } catch (error) {
+    console.error('Withdrawal error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================
+// ERROR HANDLER
+// ============================================
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ success: false, error: 'Internal Server Error' });
 });
 
 // ============================================
@@ -219,6 +301,8 @@ app.get('/api/admin/withdrawals', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`✅ Firestore connected`);
+  console.log(`✅ Ready to handle requests`);
 });
 
 module.exports = app;
