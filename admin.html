@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Admin Control Panel</title>
+    <title>Admin Control Panel</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #121212; color: #fff; padding: 20px; max-width: 800px; margin: 0 auto; }
+        body { background-color: #121212; color: #fff; padding: 20px; max-width: 900px; margin: 0 auto; }
         .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; }
         h1, h2, h3 { color: #ff9800; margin-bottom: 15px; }
         input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 14px; }
@@ -20,124 +20,145 @@
         .hidden { display: none !important; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; justify-content: center; align-items: center; z-index: 999; }
         .login-box { background: #1e1e1e; padding: 30px; border-radius: 12px; border: 1px solid #333; width: 320px; text-align: center; }
+        .msg { padding: 10px; border-radius: 5px; margin-bottom: 10px; display: none; }
+        .msg.show { display: block; }
+        .msg.success { background: #4caf50; color: white; }
+        .msg.error { background: #f44336; color: white; }
     </style>
 </head>
 <body>
 
-    <!-- ADMIN LOGIN OVERLAY -->
-    <div id="adminLoginOverlay" class="overlay">
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay" class="overlay">
         <div class="login-box">
             <h2>Admin Login</h2>
-            <p id="adminPassError" style="color:#ff5252; font-size:13px; margin-bottom:10px;"></p>
-            <input type="password" id="adminPasscode" placeholder="Enter Admin Passcode">
-            <button onclick="unlockAdminPanel()">Access Dashboard</button>
+            <div class="msg error" id="errorMsg"></div>
+            <input type="password" id="adminPass" placeholder="Enter Password">
+            <button onclick="login()">Login</button>
         </div>
     </div>
 
-    <!-- ADMIN MAIN DASHBOARD -->
-    <div id="adminDashboard" class="hidden">
+    <!-- ADMIN DASHBOARD -->
+    <div id="dashboard" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h1>Admin Control Panel</h1>
-            <button onclick="lockAdminPanel()" style="width: auto; background: #ff5252; color: #fff; padding: 8px 16px;">Logout</button>
+            <button onclick="logout()" style="width: auto; background: #ff5252; color: #fff; padding: 8px 16px;">Logout</button>
         </div>
 
-        <!-- STATS OVERVIEW -->
+        <div class="msg success" id="successMsg"></div>
+        <div class="msg error" id="dashErrorMsg"></div>
+
+        <!-- STATS -->
         <div class="stats-grid">
             <div class="stat-card">
                 <span>Total Users</span>
                 <h2 id="totalUsers">0</h2>
             </div>
             <div class="stat-card">
-                <span>Total Payouts</span>
+                <span>Total Tasks</span>
+                <h2 id="totalTasks">0</h2>
+            </div>
+            <div class="stat-card">
+                <span>Total Withdrawals</span>
                 <h2 id="totalPayouts">₹0</h2>
             </div>
         </div>
 
-        <!-- ADD TASK -->
+        <!-- ADD TASK FORM -->
         <div class="card">
             <h3>Add New Task</h3>
             <input type="text" id="taskTitle" placeholder="Task Title (e.g. Subscribe Channel)">
             <input type="number" id="taskReward" placeholder="Reward Amount (₹)">
-            <input type="text" id="taskLink" placeholder="Task Target URL">
-            <button id="addBtn" onclick="addNewTask()">Publish Task</button>
+            <input type="text" id="taskUrl" placeholder="Task URL (optional)">
+            <button id="addBtn" onclick="addTask()">Publish Task</button>
         </div>
 
-        <!-- MANAGE TASKS -->
+        <!-- ACTIVE TASKS -->
         <div class="card">
             <h3>Active Tasks</h3>
-            <div id="adminTaskList">Loading...</div>
+            <button style="width: auto; background: #667eea; margin-bottom: 10px;" onclick="loadTasks()">🔄 Refresh</button>
+            <div id="tasksList">Loading tasks...</div>
         </div>
 
-        <!-- PAYOUT REQUESTS -->
+        <!-- WITHDRAWALS -->
         <div class="card">
             <h3>Pending Withdrawals</h3>
-            <div id="withdrawalList">Loading...</div>
+            <button style="width: auto; background: #667eea; margin-bottom: 10px;" onclick="loadWithdrawals()">🔄 Refresh</button>
+            <div id="withdrawalsList">Loading withdrawals...</div>
         </div>
     </div>
 
     <script>
-        const BACKEND_URL = 'https://task-reward-app.onrender.com'; // Live Render Backend Link
-        const ADMIN_SECRET = 'Asr@1234'; // Master Passcode
+        const API_URL = 'https://task-reward-app.onrender.com';
+        const ADMIN_PASS = 'Asr@1234';
 
-        // Helper Function for Headers
         function getHeaders() {
             return {
                 'Content-Type': 'application/json',
-                'x-admin-key': ADMIN_SECRET
+                'x-admin-key': ADMIN_PASS
             };
         }
 
-        window.onload = function() {
-            const isAuth = localStorage.getItem('adminAuth');
-            if (isAuth === ADMIN_SECRET) showDashboard();
+        function showMsg(type, msg) {
+            const elem = type === 'success' ? document.getElementById('successMsg') : document.getElementById('dashErrorMsg');
+            elem.innerText = msg;
+            elem.classList.add('show', type);
+            setTimeout(() => elem.classList.remove('show'), 4000);
+        }
+
+        window.onload = () => {
+            if (localStorage.getItem('adminAuth') === ADMIN_PASS) showDashboard();
         };
 
-        function unlockAdminPanel() {
-            const inputPass = document.getElementById('adminPasscode').value;
-            const errBox = document.getElementById('adminPassError');
-
-            if (inputPass === ADMIN_SECRET) {
-                localStorage.setItem('adminAuth', ADMIN_SECRET);
+        function login() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === ADMIN_PASS) {
+                localStorage.setItem('adminAuth', ADMIN_PASS);
                 showDashboard();
             } else {
-                errBox.innerText = 'Incorrect Admin Passcode!';
+                const msg = document.getElementById('errorMsg');
+                msg.innerText = 'Wrong password!';
+                msg.classList.add('show');
             }
         }
 
         function showDashboard() {
-            document.getElementById('adminLoginOverlay').classList.add('hidden');
-            document.getElementById('adminDashboard').classList.remove('hidden');
-            loadAdminStats();
-            loadAdminTasks();
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            loadStats();
+            loadTasks();
             loadWithdrawals();
+            setInterval(loadStats, 10000);
         }
 
-        async function loadAdminStats() {
+        async function loadStats() {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/stats`, {
-                    headers: getHeaders()
-                });
+                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: getHeaders() });
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('totalUsers').innerText = data.stats.totalUsers || 0;
+                    document.getElementById('totalTasks').innerText = data.stats.totalTasks || 0;
                     document.getElementById('totalPayouts').innerText = `₹${data.stats.totalWithdrawals || 0}`;
                 }
             } catch (err) { console.error(err); }
         }
 
-        async function addNewTask() {
+        async function addTask() {
             const title = document.getElementById('taskTitle').value.trim();
             const amount = document.getElementById('taskReward').value.trim();
-            const url = document.getElementById('taskLink').value.trim();
+            const url = document.getElementById('taskUrl').value.trim();
             const btn = document.getElementById('addBtn');
 
-            if (!title || !amount) return alert('Please fill in Title and Reward Amount!');
+            if (!title || !amount) {
+                showMsg('error', 'Please fill Title and Reward!');
+                return;
+            }
 
-            btn.innerText = 'Publishing... (Please Wait)';
+            btn.innerText = 'Publishing...';
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/tasks`, {
+                const res = await fetch(`${API_URL}/api/admin/tasks`, {
                     method: 'POST',
                     headers: getHeaders(),
                     body: JSON.stringify({ 
@@ -145,90 +166,85 @@
                         amount: Number(amount), 
                         reward: Number(amount), 
                         url,
-                        description: "Complete this task",
-                        time: 60 
+                        description: "Complete this task"
                     })
                 });
 
                 const data = await res.json();
-
-                if (res.ok && data.success) {
-                    alert('✅ Task Added Successfully!');
+                if (data.success) {
+                    showMsg('success', '✅ Task Published!');
                     document.getElementById('taskTitle').value = '';
                     document.getElementById('taskReward').value = '';
-                    document.getElementById('taskLink').value = '';
-                    loadAdminTasks();
-                    loadAdminStats();
+                    document.getElementById('taskUrl').value = '';
+                    setTimeout(() => { loadTasks(); loadStats(); }, 500);
                 } else {
-                    alert('❌ Backend Error: ' + (data.error || 'Unauthorized Action'));
+                    showMsg('error', 'Error: ' + data.error);
                 }
             } catch (err) {
-                alert('⚠️ Server Timeout: Render server active ho raha hai. 10-20 sec baad fir se "Publish Task" dabayein!');
+                showMsg('error', 'Error: ' + err.message);
             } finally {
                 btn.innerText = 'Publish Task';
                 btn.disabled = false;
             }
         }
 
-        async function loadAdminTasks() {
+        async function loadTasks() {
             try {
-                // Pass admin headers to bypass 401 on /api/tasks if needed
-                const res = await fetch(`${BACKEND_URL}/api/tasks`, {
-                    headers: getHeaders()
-                });
+                const res = await fetch(`${API_URL}/api/tasks`);
                 const data = await res.json();
-                const taskContainer = document.getElementById('adminTaskList');
-                taskContainer.innerHTML = '';
+                const container = document.getElementById('tasksList');
+                container.innerHTML = '';
 
-                const taskList = Array.isArray(data) ? data : (data.tasks || []);
-
-                if (taskList.length > 0) {
-                    taskList.forEach(t => {
-                        const taskId = t.id || t._id;
-                        taskContainer.innerHTML += `
+                const tasks = data.tasks || [];
+                if (tasks.length > 0) {
+                    tasks.forEach(t => {
+                        container.innerHTML += `
                             <div class="item-row">
                                 <div>
-                                    <strong>${t.title}</strong> — ₹${t.amount}
+                                    <strong>${t.title}</strong><br>
+                                    <small style="color:#aaa;">₹${t.amount} | ${t.url || 'No link'}</small>
                                 </div>
-                                <span style="font-size:12px; color:#aaa;">Active</span>
+                                <span style="color:#4caf50;">✓</span>
                             </div>
                         `;
                     });
                 } else {
-                    taskContainer.innerHTML = '<p style="color:#aaa; font-size:13px;">No active tasks found.</p>';
+                    container.innerHTML = '<p style="color:#aaa;">No tasks yet</p>';
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                document.getElementById('tasksList').innerHTML = '<p style="color:#ff5252;">Error loading tasks</p>';
+            }
         }
 
         async function loadWithdrawals() {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/withdrawals`, {
-                    headers: getHeaders()
-                });
+                const res = await fetch(`${API_URL}/api/admin/withdrawals`, { headers: getHeaders() });
                 const data = await res.json();
-                const container = document.getElementById('withdrawalList');
+                const container = document.getElementById('withdrawalsList');
                 container.innerHTML = '';
 
-                const withdrawals = Array.isArray(data) ? data : (data.withdrawals || []);
-
+                const withdrawals = data.withdrawals || [];
                 if (withdrawals.length > 0) {
                     withdrawals.forEach(w => {
                         container.innerHTML += `
                             <div class="item-row">
                                 <div>
                                     <strong>₹${w.amount}</strong><br>
-                                    <small style="color:#aaa;">User ID: ${w.userId}</small>
+                                    <small style="color:#aaa;">${w.userEmail} | ${w.upi}</small>
                                 </div>
+                                <span style="background:#ff9800;padding:4px 8px;border-radius:4px;font-size:11px;">PENDING</span>
                             </div>
                         `;
                     });
                 } else {
-                    container.innerHTML = '<p style="color:#aaa; font-size:13px;">No pending requests.</p>';
+                    container.innerHTML = '<p style="color:#aaa;">No pending withdrawals</p>';
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                document.getElementById('withdrawalsList').innerHTML = '<p style="color:#ff5252;">Error loading withdrawals</p>';
+            }
         }
 
-        function lockAdminPanel() {
+        function logout() {
             localStorage.removeItem('adminAuth');
             location.reload();
         }
